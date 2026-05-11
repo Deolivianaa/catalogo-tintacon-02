@@ -80,19 +80,13 @@ export function parseCsv(
     const totalBytes = typeof file === "string" ? 0 : file.size;
     let estimatedTotal = totalBytes > 0 ? Math.max(1, Math.round(totalBytes / 220)) : 0;
 
-    const baseConfig: Papa.ParseConfig<Record<string, string>> & {
-      chunk?: (
-        results: Papa.ParseResult<Record<string, string>>,
-        parser: Papa.Parser,
-      ) => void;
-      chunkSize?: number;
-    } = {
+    const baseConfig = {
       header: true,
       delimiter: ";",
       skipEmptyLines: true,
       transformHeader: (h: string) => h.trim().toUpperCase(),
       chunkSize: 1024 * 256,
-      chunk: (results, parser) => {
+      chunk: (results: Papa.ParseResult<Record<string, string>>) => {
         rows.push(...rowsFromResults(results.data));
         if (onProgress) {
           const cursor = (results.meta as { cursor?: number }).cursor ?? 0;
@@ -107,7 +101,6 @@ export function parseCsv(
             percent = Math.min(95, Math.round((rows.length / total) * 100));
           }
           onProgress({ processed: rows.length, total, percent });
-          void parser;
         }
       },
       complete: () => {
@@ -123,9 +116,11 @@ export function parseCsv(
     };
 
     if (typeof file === "string") {
-      Papa.parse<Record<string, string>>(file, { ...baseConfig, download: true });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Papa.parse(file, { ...baseConfig, download: true } as any);
     } else {
-      Papa.parse<Record<string, string>>(file, baseConfig);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Papa.parse(file as File, baseConfig as any);
     }
   });
 }
