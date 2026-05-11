@@ -30,7 +30,7 @@ export function ImportCSVDialog({ open, onClose, onImport }: Props) {
   }, [open]);
 
   const tryUnlock = () => {
-    if (pwd.trim().toLowerCase() === PASSWORD) {
+    if (pwd === PASSWORD) {
       setUnlocked(true);
     } else {
       toast.error("Senha incorreta");
