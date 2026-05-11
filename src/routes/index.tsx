@@ -93,37 +93,42 @@ function Index() {
           <SearchBar value={search} onChange={setSearch} />
           <Filters filters={filters} options={options} onChange={setFilters} />
 
-          {(() => null)()}
-          {(
-          <>
-            <p className="text-sm text-muted-foreground">
-              Exibindo <span className="font-semibold text-foreground">{filtered.length.toLocaleString("pt-BR")}</span> produtos
-              {totalPages > 1 && (
-                <span className="ml-1">
-                  (página {page} de {totalPages})
-                </span>
-              )}
-            </p>
-
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-16 text-center text-muted-foreground">
-                <PackageX className="h-10 w-10 opacity-50" />
-                <p className="text-sm">Nenhum produto encontrado</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {paged.map((p) => (
-                  <ProductCard key={p.id} product={p} onClick={() => setSelected(p)} />
-                ))}
-              </div>
+          <p className="text-sm text-muted-foreground">
+            Exibindo{" "}
+            <span className="font-semibold text-foreground">
+              {filtered.length.toLocaleString("pt-BR")}
+            </span>{" "}
+            produtos
+            {totalPages > 1 && (
+              <span className="ml-1">
+                (página {page} de {totalPages})
+              </span>
             )}
+          </p>
 
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-          </>
-        )}
-      </main>
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-16 text-center text-muted-foreground">
+              <PackageX className="h-10 w-10 opacity-50" />
+              <p className="text-sm">Nenhum produto encontrado</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {paged.map((p) => (
+                <ProductCard key={p.id} product={p} onClick={() => setSelected(p)} />
+              ))}
+            </div>
+          )}
+
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+        </main>
+      )}
 
       <ProductModal product={selected} onClose={() => setSelected(null)} />
+      <ImportCSVDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImport={(file, opts) => importFile(file, opts)}
+      />
     </div>
   );
 }
