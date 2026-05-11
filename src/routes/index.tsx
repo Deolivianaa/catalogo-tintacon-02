@@ -31,7 +31,8 @@ function uniqueSorted(arr: string[]): string[] {
 }
 
 function Index() {
-  const { products, loading, importFile } = useCatalog();
+  const { products, loading, progress, importFile } = useCatalog();
+  const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 220);
   const [filters, setFilters] = useState<FilterState>({
@@ -83,18 +84,17 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CatalogHeader total={products.length} onImport={importFile} />
+      <CatalogHeader total={products.length} onImportClick={() => setImportOpen(true)} />
 
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
-        <SearchBar value={search} onChange={setSearch} />
-        <Filters filters={filters} options={options} onChange={setFilters} />
+      {loading ? (
+        <LoadingScreen progress={progress} />
+      ) : (
+        <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+          <SearchBar value={search} onChange={setSearch} />
+          <Filters filters={filters} options={options} onChange={setFilters} />
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Carregando catálogo...
-          </div>
-        ) : (
+          {(() => null)()}
+          {(
           <>
             <p className="text-sm text-muted-foreground">
               Exibindo <span className="font-semibold text-foreground">{filtered.length.toLocaleString("pt-BR")}</span> produtos
