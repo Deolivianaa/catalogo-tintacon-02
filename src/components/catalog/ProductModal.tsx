@@ -86,22 +86,29 @@ export function ProductModal({ product, onClose }: Props) {
                   <Box className="h-4 w-4 text-primary" />
                   Unidade de Medida
                 </label>
-                <Select
-                  value={String(variantIdx)}
-                  onValueChange={(v) => setVariantIdx(Number(v))}
-                >
-                  <SelectTrigger className="h-11 border-primary/40 ring-1 ring-primary/20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {variants.map((v, i) => (
-                      <SelectItem key={`${v.um}-${i}`} value={String(i)}>
-                        {v.um || "—"} - Cód: {v.codigo}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {variants.length > 1 ? (
+                  <Select
+                    value={String(variantIdx)}
+                    onValueChange={(v) => setVariantIdx(Number(v))}
+                  >
+                    <SelectTrigger className="h-11 border-primary/40 ring-1 ring-primary/20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {variants.map((v, i) => (
+                        <SelectItem key={`${v.um}-${i}`} value={String(i)}>
+                          {v.um || "—"} - Cód: {v.codigo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex h-11 items-center rounded-md border border-border bg-muted/40 px-3 text-sm font-medium text-foreground">
+                    {variant?.um || "—"}
+                  </div>
+                )}
               </div>
+
 
               <div className="flex min-h-32 items-center justify-center rounded-xl border border-border bg-white p-4">
                 {barcode ? (
