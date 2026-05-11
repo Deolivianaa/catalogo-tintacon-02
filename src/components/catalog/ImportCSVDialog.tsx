@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-const PASSWORD = "tintacon";
+const PASSWORD = "#nfFbt";
 
 interface Props {
   open: boolean;
@@ -30,7 +30,7 @@ export function ImportCSVDialog({ open, onClose, onImport }: Props) {
   }, [open]);
 
   const tryUnlock = () => {
-    if (pwd.trim().toLowerCase() === PASSWORD) {
+    if (pwd === PASSWORD) {
       setUnlocked(true);
     } else {
       toast.error("Senha incorreta");
