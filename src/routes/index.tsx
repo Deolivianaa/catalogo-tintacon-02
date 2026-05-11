@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { Loader2, PackageX } from "lucide-react";
+import { PackageX } from "lucide-react";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CatalogHeader } from "@/components/catalog/CatalogHeader";
@@ -9,6 +9,8 @@ import { Filters, type FilterState } from "@/components/catalog/Filters";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { ProductModal } from "@/components/catalog/ProductModal";
 import { Pagination } from "@/components/catalog/Pagination";
+import { ImportCSVDialog } from "@/components/catalog/ImportCSVDialog";
+import { LoadingScreen } from "@/components/catalog/LoadingScreen";
 import type { Product } from "@/types/product";
 
 export const Route = createFileRoute("/")({
