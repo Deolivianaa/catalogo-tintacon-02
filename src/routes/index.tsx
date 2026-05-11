@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { Loader2, PackageX } from "lucide-react";
+import { PackageX } from "lucide-react";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CatalogHeader } from "@/components/catalog/CatalogHeader";
@@ -9,6 +9,8 @@ import { Filters, type FilterState } from "@/components/catalog/Filters";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { ProductModal } from "@/components/catalog/ProductModal";
 import { Pagination } from "@/components/catalog/Pagination";
+import { ImportCSVDialog } from "@/components/catalog/ImportCSVDialog";
+import { LoadingScreen } from "@/components/catalog/LoadingScreen";
 import type { Product } from "@/types/product";
 
 export const Route = createFileRoute("/")({
@@ -29,7 +31,8 @@ function uniqueSorted(arr: string[]): string[] {
 }
 
 function Index() {
-  const { products, loading, importFile } = useCatalog();
+  const { products, loading, progress, importFile } = useCatalog();
+  const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 220);
   const [filters, setFilters] = useState<FilterState>({
@@ -81,47 +84,51 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CatalogHeader total={products.length} onImport={importFile} />
+      <CatalogHeader total={products.length} onImportClick={() => setImportOpen(true)} />
 
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
-        <SearchBar value={search} onChange={setSearch} />
-        <Filters filters={filters} options={options} onChange={setFilters} />
+      {loading ? (
+        <LoadingScreen progress={progress} />
+      ) : (
+        <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+          <SearchBar value={search} onChange={setSearch} />
+          <Filters filters={filters} options={options} onChange={setFilters} />
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Carregando catálogo...
-          </div>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Exibindo <span className="font-semibold text-foreground">{filtered.length.toLocaleString("pt-BR")}</span> produtos
-              {totalPages > 1 && (
-                <span className="ml-1">
-                  (página {page} de {totalPages})
-                </span>
-              )}
-            </p>
-
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-16 text-center text-muted-foreground">
-                <PackageX className="h-10 w-10 opacity-50" />
-                <p className="text-sm">Nenhum produto encontrado</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {paged.map((p) => (
-                  <ProductCard key={p.id} product={p} onClick={() => setSelected(p)} />
-                ))}
-              </div>
+          <p className="text-sm text-muted-foreground">
+            Exibindo{" "}
+            <span className="font-semibold text-foreground">
+              {filtered.length.toLocaleString("pt-BR")}
+            </span>{" "}
+            produtos
+            {totalPages > 1 && (
+              <span className="ml-1">
+                (página {page} de {totalPages})
+              </span>
             )}
+          </p>
 
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-          </>
-        )}
-      </main>
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-16 text-center text-muted-foreground">
+              <PackageX className="h-10 w-10 opacity-50" />
+              <p className="text-sm">Nenhum produto encontrado</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {paged.map((p) => (
+                <ProductCard key={p.id} product={p} onClick={() => setSelected(p)} />
+              ))}
+            </div>
+          )}
+
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+        </main>
+      )}
 
       <ProductModal product={selected} onClose={() => setSelected(null)} />
+      <ImportCSVDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImport={(file, opts) => importFile(file, opts)}
+      />
     </div>
   );
 }

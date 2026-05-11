@@ -65,34 +65,62 @@ function rowsFromResults(data: Record<string, string>[]): RawProduct[] {
     .filter((r) => r.codigo && r.descricao);
 }
 
-export function parseCsv(file: File | string): Promise<Product[]> {
+export interface ParseProgress {
+  processed: number;
+  total: number;
+  percent: number;
+}
+
+export function parseCsv(
+  file: File | string,
+  onProgress?: (p: ParseProgress) => void,
+): Promise<Product[]> {
   return new Promise((resolve, reject) => {
-    const handle = (results: Papa.ParseResult<Record<string, string>>) => {
-      try {
-        resolve(buildProducts(rowsFromResults(results.data)));
-      } catch (e) {
-        reject(e);
-      }
+    const rows: RawProduct[] = [];
+    const totalBytes = typeof file === "string" ? 0 : file.size;
+    let estimatedTotal = totalBytes > 0 ? Math.max(1, Math.round(totalBytes / 220)) : 0;
+
+    const baseConfig = {
+      header: true,
+      delimiter: ";",
+      skipEmptyLines: true,
+      transformHeader: (h: string) => h.trim().toUpperCase(),
+      chunkSize: 1024 * 256,
+      chunk: (results: Papa.ParseResult<Record<string, string>>) => {
+        rows.push(...rowsFromResults(results.data));
+        if (onProgress) {
+          const cursor = (results.meta as { cursor?: number }).cursor ?? 0;
+          let percent = 0;
+          let total = estimatedTotal;
+          if (totalBytes > 0) {
+            percent = Math.min(99, Math.round((cursor / totalBytes) * 100));
+            total = Math.max(estimatedTotal, rows.length);
+          } else {
+            estimatedTotal = Math.max(estimatedTotal, rows.length * 2);
+            total = estimatedTotal;
+            percent = Math.min(95, Math.round((rows.length / total) * 100));
+          }
+          onProgress({ processed: rows.length, total, percent });
+        }
+      },
+      complete: () => {
+        try {
+          const products = buildProducts(rows);
+          onProgress?.({ processed: rows.length, total: rows.length, percent: 100 });
+          resolve(products);
+        } catch (e) {
+          reject(e);
+        }
+      },
+      error: (err: Error) => reject(err),
     };
+
     if (typeof file === "string") {
-      Papa.parse<Record<string, string>>(file, {
-        header: true,
-        delimiter: ";",
-        skipEmptyLines: true,
-        download: true,
-        transformHeader: (h: string) => h.trim().toUpperCase(),
-        complete: handle,
-        error: (err: Error) => reject(err),
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Papa.parse(file, { ...baseConfig, download: true } as any);
     } else {
-      Papa.parse<Record<string, string>>(file, {
-        header: true,
-        delimiter: ";",
-        skipEmptyLines: true,
-        transformHeader: (h: string) => h.trim().toUpperCase(),
-        complete: handle,
-        error: (err: Error) => reject(err),
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Papa.parse(file as File, baseConfig as any);
     }
   });
 }
