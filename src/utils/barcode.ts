@@ -23,16 +23,30 @@ export function renderBarcode(canvas: HTMLCanvasElement, code: string) {
 }
 
 export function downloadCanvas(canvas: HTMLCanvasElement, filename: string) {
+  const safe = filename.replace(/[^a-z0-9_.-]+/gi, "_").slice(0, 80) || "barcode";
   const link = document.createElement("a");
-  link.download = `${filename}.png`;
+  link.download = `${safe}.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+  );
 }
 
 export function printCanvas(canvas: HTMLCanvasElement, title: string) {
   const dataUrl = canvas.toDataURL("image/png");
   const w = window.open("", "_blank", "width=600,height=400");
   if (!w) return;
-  w.document.write(`<html><head><title>${title}</title></head><body style="display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;"><h3>${title}</h3><img src="${dataUrl}" /><script>window.onload=()=>{window.print();setTimeout(()=>window.close(),300);}</script></body></html>`);
+  const safeTitle = escapeHtml(title);
+  w.document.write(
+    `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title></head>` +
+      `<body style="display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;">` +
+      `<h3>${safeTitle}</h3><img alt="" src="${dataUrl}" />` +
+      `<script>window.onload=function(){window.print();setTimeout(function(){window.close();},300);}<\/script>` +
+      `</body></html>`,
+  );
   w.document.close();
 }

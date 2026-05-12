@@ -17,11 +17,20 @@ export function useCatalog() {
       try {
         const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
         if (cached) {
-          const parsed = JSON.parse(cached) as Product[];
-          if (!cancelled && Array.isArray(parsed) && parsed.length) {
-            setProducts(parsed);
-            setLoading(false);
-            return;
+          try {
+            const parsed = JSON.parse(cached) as Product[];
+            if (!cancelled && Array.isArray(parsed) && parsed.length) {
+              setProducts(parsed);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // cache corrompido — limpa e segue para CSV padrão
+            try {
+              localStorage.removeItem(STORAGE_KEY);
+            } catch {
+              /* ignore */
+            }
           }
         }
         setProgress({ processed: 0, total: 0, percent: 0 });
@@ -65,7 +74,7 @@ export function useCatalog() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch {
-        /* quota */
+        toast.warning("Cache local cheio — produtos carregados, mas não persistidos");
       }
       toast.success(`${data.length.toLocaleString("pt-BR")} produtos importados`);
     } catch (e) {
