@@ -118,7 +118,7 @@ export async function parseCsv(
       delimiter: ";",
       skipEmptyLines: true,
       transformHeader: (h: string) => h.trim().toUpperCase(),
-      chunk: (results) => {
+      chunk: (results: Papa.ParseResult<Record<string, string>>) => {
         rows.push(...rowsFromResults(results.data));
         if (onProgress) {
           const cursor = (results.meta as { cursor?: number }).cursor ?? 0;
