@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Download, Printer, X } from "lucide-react";
+import { Box, Download, Printer } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,19 +68,11 @@ export function ProductModal({ product, onClose }: Props) {
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0">
         {product && (
           <>
-            <div className="flex items-start justify-between p-6 pb-4">
-              <div className="pr-8">
-                <h2 className="text-base font-semibold leading-tight text-foreground">
-                  {product.descricao}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">Código: {product.codigo}</p>
-              </div>
-              <button
-                onClick={onClose}
-                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            <div className="p-6 pb-4 pr-12">
+              <h2 className="text-base font-semibold leading-tight text-foreground">
+                {product.descricao}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">Código: {product.codigo}</p>
             </div>
 
             <div className="space-y-4 px-6 pb-6">
