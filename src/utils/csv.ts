@@ -118,11 +118,11 @@ export async function parseCsv(
       delimiter: ";",
       skipEmptyLines: true,
       transformHeader: (h: string) => h.trim().toUpperCase(),
+      chunkSize: 1024 * 256,
       chunk: (results: Papa.ParseResult<Record<string, string>>) => {
         rows.push(...rowsFromResults(results.data));
         if (onProgress) {
           const cursor = (results.meta as { cursor?: number }).cursor ?? 0;
-          // Parse phase = 30..99%
           const percent = 30 + Math.min(69, Math.round((cursor / totalChars) * 69));
           const now = Date.now();
           if (now - lastReport > 60 || percent >= 99) {
@@ -131,8 +131,12 @@ export async function parseCsv(
           }
         }
       },
-      complete: () => {
+      complete: (results?: Papa.ParseResult<Record<string, string>>) => {
         try {
+          // Fallback: if chunk never fired (e.g. small file), use complete results
+          if (rows.length === 0 && results?.data?.length) {
+            rows.push(...rowsFromResults(results.data));
+          }
           const products = buildProducts(rows);
           onProgress?.({ processed: rows.length, total: rows.length, percent: 100 });
           resolve(products);
