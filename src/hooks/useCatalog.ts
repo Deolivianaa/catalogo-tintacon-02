@@ -74,7 +74,7 @@ export function useCatalog() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch {
-        /* quota */
+        toast.warning("Cache local cheio — produtos carregados, mas não persistidos");
       }
       toast.success(`${data.length.toLocaleString("pt-BR")} produtos importados`);
     } catch (e) {
