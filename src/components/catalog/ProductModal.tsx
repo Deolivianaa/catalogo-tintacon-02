@@ -27,7 +27,10 @@ export function ProductModal({ product, onClose }: Props) {
   }, [product?.id]);
 
   const variant = variants[variantIdx];
-  const barcode = variant?.codigoBarras || product?.codigoBarras || "";
+  // Cada variante (UM) tem seu próprio código de barras. Não fazer fallback
+  // para o barcode "principal" do produto, pois isso fazia variantes sem
+  // código (ex.: CX) exibirem o código da UN.
+  const barcode = variant?.codigoBarras || "";
 
   useEffect(() => {
     if (!product || !barcode) return;
