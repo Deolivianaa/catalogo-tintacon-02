@@ -1,15 +1,16 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import type { Product } from "@/types/product";
 
 interface Props {
   product: Product;
-  onClick: () => void;
+  onSelect: (product: Product) => void;
 }
 
-function ProductCardImpl({ product, onClick }: Props) {
+function ProductCardImpl({ product, onSelect }: Props) {
+  const handleClick = useCallback(() => onSelect(product), [onSelect, product]);
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className="group relative flex h-full flex-col rounded-xl border border-border bg-card p-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elevated"
     >
       <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
