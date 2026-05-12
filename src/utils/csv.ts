@@ -71,36 +71,64 @@ export interface ParseProgress {
   percent: number;
 }
 
-export function parseCsv(
+async function loadText(
+  file: File | string,
+  onPhase?: (p: ParseProgress) => void,
+): Promise<string> {
+  if (typeof file !== "string") {
+    return await file.text();
+  }
+  const res = await fetch(file);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const totalHeader = res.headers.get("content-length");
+  const total = totalHeader ? parseInt(totalHeader, 10) : 0;
+  if (!res.body || !total) {
+    return await res.text();
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let received = 0;
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    text += decoder.decode(value, { stream: true });
+    // Download phase = 0..30% of overall progress
+    const percent = Math.min(30, Math.round((received / total) * 30));
+    onPhase?.({ processed: received, total, percent });
+  }
+  text += decoder.decode();
+  return text;
+}
+
+export async function parseCsv(
   file: File | string,
   onProgress?: (p: ParseProgress) => void,
 ): Promise<Product[]> {
+  const text = await loadText(file, onProgress);
+  const totalChars = text.length || 1;
+
   return new Promise((resolve, reject) => {
     const rows: RawProduct[] = [];
-    const totalBytes = typeof file === "string" ? 0 : file.size;
-    let estimatedTotal = totalBytes > 0 ? Math.max(1, Math.round(totalBytes / 220)) : 0;
+    let lastReport = 0;
 
-    const baseConfig = {
+    Papa.parse<Record<string, string>>(text, {
       header: true,
       delimiter: ";",
       skipEmptyLines: true,
       transformHeader: (h: string) => h.trim().toUpperCase(),
-      chunkSize: 1024 * 256,
-      chunk: (results: Papa.ParseResult<Record<string, string>>) => {
+      chunk: (results) => {
         rows.push(...rowsFromResults(results.data));
         if (onProgress) {
           const cursor = (results.meta as { cursor?: number }).cursor ?? 0;
-          let percent = 0;
-          let total = estimatedTotal;
-          if (totalBytes > 0) {
-            percent = Math.min(99, Math.round((cursor / totalBytes) * 100));
-            total = Math.max(estimatedTotal, rows.length);
-          } else {
-            estimatedTotal = Math.max(estimatedTotal, rows.length * 2);
-            total = estimatedTotal;
-            percent = Math.min(95, Math.round((rows.length / total) * 100));
+          // Parse phase = 30..99%
+          const percent = 30 + Math.min(69, Math.round((cursor / totalChars) * 69));
+          const now = Date.now();
+          if (now - lastReport > 60 || percent >= 99) {
+            lastReport = now;
+            onProgress({ processed: rows.length, total: rows.length, percent });
           }
-          onProgress({ processed: rows.length, total, percent });
         }
       },
       complete: () => {
@@ -109,18 +137,10 @@ export function parseCsv(
           onProgress?.({ processed: rows.length, total: rows.length, percent: 100 });
           resolve(products);
         } catch (e) {
-          reject(e);
+          reject(e as Error);
         }
       },
       error: (err: Error) => reject(err),
-    };
-
-    if (typeof file === "string") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      Papa.parse(file, { ...baseConfig, download: true } as any);
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      Papa.parse(file as File, baseConfig as any);
-    }
+    });
   });
 }
