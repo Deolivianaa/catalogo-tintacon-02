@@ -2,27 +2,37 @@ import Papa from "papaparse";
 import type { Product, RawProduct } from "@/types/product";
 
 const HEADER_MAP: Record<string, keyof RawProduct> = {
-  CÓDIGO: "codigo",
-  DESCRIÇÃO: "descricao",
-  CÓDIGOCLASSIFICAÇÃO: "codigoClassificacao",
-  CLASSIFICAÇÃO: "classificacao",
+  CODIGO: "codigo",
+  DESCRICAO: "descricao",
+  CODIGOCLASSIFICACAO: "codigoClassificacao",
+  CLASSIFICACAO: "classificacao",
   MODELO: "modelo",
   UM: "um",
-  CÓDIGOBARRAS: "codigoBarras",
-  CÓDIGOFÁBRICA: "codigoFabrica",
-  "CÓD.MARCA": "codMarca",
+  CODIGOBARRAS: "codigoBarras",
+  CODIGOFABRICA: "codigoFabrica",
+  CODMARCA: "codMarca",
   MARCA: "marca",
   CDLN: "cdln",
   LINHA: "linha",
-  CÓDFAMÍLIA: "codFamilia",
-  FAMÍLIA: "familia",
+  CODFAMILIA: "codFamilia",
+  FAMILIA: "familia",
   CDTP: "cdtp",
   TIPO: "tipo",
   CDSB: "cdsb",
   SUBTIPO: "subtipo",
-  CÓDIGOFABRICANTE: "codigoFabricante",
+  CODIGOFABRICANTE: "codigoFabricante",
   FABRICANTE: "fabricante",
 };
+
+function normalizeHeader(value: string): string {
+  return value
+    .replace(/^\uFEFF/, "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
 
 function clean(v: unknown): string {
   if (v === null || v === undefined) return "";
@@ -57,8 +67,9 @@ function rowsFromResults(data: Record<string, string>[]): RawProduct[] {
   return data
     .map((row) => {
       const out: Partial<RawProduct> = {};
-      for (const [csvKey, field] of Object.entries(HEADER_MAP)) {
-        out[field] = clean(row[csvKey]);
+      for (const [csvKey, value] of Object.entries(row)) {
+        const field = HEADER_MAP[normalizeHeader(csvKey)];
+        if (field) out[field] = clean(value);
       }
       return out as RawProduct;
     })
@@ -76,7 +87,15 @@ async function loadText(
   onPhase?: (p: ParseProgress) => void,
 ): Promise<string> {
   if (typeof file !== "string") {
-    return await file.text();
+    const buffer = await file.arrayBuffer();
+    let text = "";
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    } catch {
+      text = new TextDecoder("windows-1252").decode(buffer);
+    }
+    onPhase?.({ processed: 0, total: countCsvRows(text), percent: 5 });
+    return text;
   }
   const res = await fetch(file);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -102,12 +121,17 @@ async function loadText(
   return text;
 }
 
+function countCsvRows(text: string): number {
+  return Math.max(0, text.split(/\r\n|\n|\r/).filter((line) => line.trim()).length - 1);
+}
+
 export async function parseCsv(
   file: File | string,
   onProgress?: (p: ParseProgress) => void,
 ): Promise<Product[]> {
   const text = await loadText(file, onProgress);
   const totalChars = text.length || 1;
+  const totalRows = countCsvRows(text);
 
   return new Promise((resolve, reject) => {
     const rows: RawProduct[] = [];
@@ -127,7 +151,7 @@ export async function parseCsv(
           const now = Date.now();
           if (now - lastReport > 60 || percent >= 99) {
             lastReport = now;
-            onProgress({ processed: rows.length, total: rows.length, percent });
+            onProgress({ processed: rows.length, total: totalRows, percent });
           }
         }
       },
@@ -137,8 +161,11 @@ export async function parseCsv(
           if (rows.length === 0 && results?.data?.length) {
             rows.push(...rowsFromResults(results.data));
           }
+          if (rows.length === 0) {
+            throw new Error("CSV sem produtos válidos");
+          }
           const products = buildProducts(rows);
-          onProgress?.({ processed: rows.length, total: rows.length, percent: 100 });
+          onProgress?.({ processed: rows.length, total: totalRows || rows.length, percent: 100 });
           resolve(products);
         } catch (e) {
           reject(e as Error);
