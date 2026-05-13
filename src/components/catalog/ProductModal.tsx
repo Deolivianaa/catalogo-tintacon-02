@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Download, Printer } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -68,6 +69,10 @@ export function ProductModal({ product, onClose }: Props) {
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0">
         {product && (
           <>
+            <VisuallyHidden>
+              <DialogTitle>{product.descricao}</DialogTitle>
+              <DialogDescription>Detalhes e código de barras do produto {product.codigo}</DialogDescription>
+            </VisuallyHidden>
             <div className="p-6 pb-4 pr-12">
               <h2 className="text-base font-semibold leading-tight text-foreground">
                 {product.descricao}
