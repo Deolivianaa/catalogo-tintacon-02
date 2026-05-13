@@ -87,7 +87,13 @@ async function loadText(
   onPhase?: (p: ParseProgress) => void,
 ): Promise<string> {
   if (typeof file !== "string") {
-    const text = await file.text();
+    const buffer = await file.arrayBuffer();
+    let text = "";
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    } catch {
+      text = new TextDecoder("windows-1252").decode(buffer);
+    }
     onPhase?.({ processed: 0, total: countCsvRows(text), percent: 5 });
     return text;
   }
