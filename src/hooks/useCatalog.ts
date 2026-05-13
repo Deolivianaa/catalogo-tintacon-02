@@ -57,7 +57,7 @@ export function useCatalog() {
     };
   }, []);
 
-  const importFile = useCallback(async (file: File, opts?: { clearBefore?: boolean }) => {
+  const importFile = useCallback(async (source: File | string, opts?: { clearBefore?: boolean }) => {
     setLoading(true);
     setProgress({ processed: 0, total: 0, percent: 0 });
     if (opts?.clearBefore) {
@@ -69,7 +69,7 @@ export function useCatalog() {
       }
     }
     try {
-      const data = await parseCsv(file, setProgress);
+      const data = await parseCsv(source, setProgress);
       setProducts(data);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -79,7 +79,8 @@ export function useCatalog() {
       toast.success(`${data.length.toLocaleString("pt-BR")} produtos importados`);
     } catch (e) {
       console.error(e);
-      toast.error("Erro ao importar CSV");
+      const msg = e instanceof Error ? e.message : "Erro ao importar arquivo";
+      toast.error(msg);
     } finally {
       setLoading(false);
       setProgress(null);
@@ -88,3 +89,4 @@ export function useCatalog() {
 
   return { products, loading, progress, importFile };
 }
+
