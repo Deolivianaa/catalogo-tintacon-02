@@ -2,27 +2,37 @@ import Papa from "papaparse";
 import type { Product, RawProduct } from "@/types/product";
 
 const HEADER_MAP: Record<string, keyof RawProduct> = {
-  CÓDIGO: "codigo",
-  DESCRIÇÃO: "descricao",
-  CÓDIGOCLASSIFICAÇÃO: "codigoClassificacao",
-  CLASSIFICAÇÃO: "classificacao",
+  CODIGO: "codigo",
+  DESCRICAO: "descricao",
+  CODIGOCLASSIFICACAO: "codigoClassificacao",
+  CLASSIFICACAO: "classificacao",
   MODELO: "modelo",
   UM: "um",
-  CÓDIGOBARRAS: "codigoBarras",
-  CÓDIGOFÁBRICA: "codigoFabrica",
-  "CÓD.MARCA": "codMarca",
+  CODIGOBARRAS: "codigoBarras",
+  CODIGOFABRICA: "codigoFabrica",
+  CODMARCA: "codMarca",
   MARCA: "marca",
   CDLN: "cdln",
   LINHA: "linha",
-  CÓDFAMÍLIA: "codFamilia",
-  FAMÍLIA: "familia",
+  CODFAMILIA: "codFamilia",
+  FAMILIA: "familia",
   CDTP: "cdtp",
   TIPO: "tipo",
   CDSB: "cdsb",
   SUBTIPO: "subtipo",
-  CÓDIGOFABRICANTE: "codigoFabricante",
+  CODIGOFABRICANTE: "codigoFabricante",
   FABRICANTE: "fabricante",
 };
+
+function normalizeHeader(value: string): string {
+  return value
+    .replace(/^\uFEFF/, "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
 
 function clean(v: unknown): string {
   if (v === null || v === undefined) return "";
@@ -57,8 +67,9 @@ function rowsFromResults(data: Record<string, string>[]): RawProduct[] {
   return data
     .map((row) => {
       const out: Partial<RawProduct> = {};
-      for (const [csvKey, field] of Object.entries(HEADER_MAP)) {
-        out[field] = clean(row[csvKey]);
+      for (const [csvKey, value] of Object.entries(row)) {
+        const field = HEADER_MAP[normalizeHeader(csvKey)];
+        if (field) out[field] = clean(value);
       }
       return out as RawProduct;
     })
