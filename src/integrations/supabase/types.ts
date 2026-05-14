@@ -14,7 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      catalog_sync: {
+        Row: {
+          id: number
+          synced_at: string
+          url: string | null
+          version: number
+        }
+        Insert: {
+          id?: number
+          synced_at?: string
+          url?: string | null
+          version?: number
+        }
+        Update: {
+          id?: number
+          synced_at?: string
+          url?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
