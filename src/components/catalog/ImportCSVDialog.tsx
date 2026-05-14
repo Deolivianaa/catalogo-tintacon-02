@@ -67,18 +67,9 @@ export function ImportCSVDialog({ open, onClose, onImport }: Props) {
           <DialogTitle>Importar Produtos</DialogTitle>
           <DialogDescription>Importe produtos via arquivo CSV/XLSX ou URL</DialogDescription>
         </VisuallyHidden>
-        <div className="flex items-start justify-between p-6 pb-3">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            <h2 className="text-base font-semibold text-foreground">Importar Produtos</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted"
-            aria-label="Fechar"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        <div className="flex items-center gap-2 p-6 pb-3">
+          <FileText className="h-5 w-5 text-primary" />
+          <h2 className="text-base font-semibold text-foreground">Importar Produtos</h2>
         </div>
 
         <p className="px-6 pb-5 text-sm text-muted-foreground">
