@@ -28,12 +28,16 @@ export function CatalogHeader({ total, onImportClick, onSyncClick, syncEnabled }
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {syncEnabled && (
-            <Button variant="outline" onClick={onSyncClick} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Sincronizar
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onClick={onSyncClick}
+            disabled={!syncEnabled}
+            title={syncEnabled ? "Sincronizar catálogo" : "Importe via URL primeiro para habilitar a sincronização"}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Sincronizar
+          </Button>
           <Button variant="outline" onClick={onImportClick} className="gap-2">
             <Upload className="h-4 w-4" />
             Importar CSV
