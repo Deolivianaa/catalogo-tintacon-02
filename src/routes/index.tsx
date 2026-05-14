@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { ProductModal } from "@/components/catalog/ProductModal";
 import { Pagination } from "@/components/catalog/Pagination";
 import { ImportCSVDialog } from "@/components/catalog/ImportCSVDialog";
+import { SyncDialog } from "@/components/catalog/SyncDialog";
 import { LoadingScreen } from "@/components/catalog/LoadingScreen";
 import type { Product } from "@/types/product";
 
