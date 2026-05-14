@@ -86,7 +86,12 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CatalogHeader total={products.length} onImportClick={() => setImportOpen(true)} />
+      <CatalogHeader
+        total={products.length}
+        onImportClick={() => setImportOpen(true)}
+        onSyncClick={() => setSyncOpen(true)}
+        syncEnabled={!!syncUrl}
+      />
 
       {loading ? (
         <LoadingScreen progress={progress} />
