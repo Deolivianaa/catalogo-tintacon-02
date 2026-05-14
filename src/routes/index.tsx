@@ -37,6 +37,7 @@ function uniqueSorted(arr: string[]): string[] {
 function Index() {
   const { products, loading, progress, importFile, syncUrl } = useCatalog();
   const [importOpen, setImportOpen] = useState(false);
+  const syncFn = useServerFn(triggerSync);
   const [syncOpen, setSyncOpen] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 220);
