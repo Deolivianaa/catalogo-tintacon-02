@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { PackageX } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CatalogHeader } from "@/components/catalog/CatalogHeader";
@@ -12,6 +14,7 @@ import { Pagination } from "@/components/catalog/Pagination";
 import { ImportCSVDialog } from "@/components/catalog/ImportCSVDialog";
 import { SyncDialog } from "@/components/catalog/SyncDialog";
 import { LoadingScreen } from "@/components/catalog/LoadingScreen";
+import { triggerSync } from "@/lib/catalog-sync.functions";
 import type { Product } from "@/types/product";
 
 export const Route = createFileRoute("/")({
