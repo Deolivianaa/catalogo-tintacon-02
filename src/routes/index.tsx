@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { PackageX } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CatalogHeader } from "@/components/catalog/CatalogHeader";
@@ -12,6 +14,7 @@ import { Pagination } from "@/components/catalog/Pagination";
 import { ImportCSVDialog } from "@/components/catalog/ImportCSVDialog";
 import { SyncDialog } from "@/components/catalog/SyncDialog";
 import { LoadingScreen } from "@/components/catalog/LoadingScreen";
+import { triggerSync } from "@/lib/catalog-sync.functions";
 import type { Product } from "@/types/product";
 
 export const Route = createFileRoute("/")({
@@ -32,8 +35,9 @@ function uniqueSorted(arr: string[]): string[] {
 }
 
 function Index() {
-  const { products, loading, progress, importFile, sync, syncUrl } = useCatalog();
+  const { products, loading, progress, importFile, syncUrl } = useCatalog();
   const [importOpen, setImportOpen] = useState(false);
+  const syncFn = useServerFn(triggerSync);
   const [syncOpen, setSyncOpen] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 220);
@@ -134,12 +138,24 @@ function Index() {
       <ImportCSVDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
-        onImport={(file, opts) => importFile(file, opts)}
+        onImport={async (file, opts) => {
+          if (typeof file === "string") {
+            try {
+              await syncFn({ data: { password: "#nfFbt", url: file } });
+              toast.success("URL salva — sincronização propagada para todos os visualizadores");
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Erro ao salvar URL";
+              toast.error(msg);
+              await importFile(file, opts);
+            }
+          } else {
+            await importFile(file, opts);
+          }
+        }}
       />
       <SyncDialog
         open={syncOpen}
         onClose={() => setSyncOpen(false)}
-        onConfirm={() => sync()}
         url={syncUrl}
       />
     </div>

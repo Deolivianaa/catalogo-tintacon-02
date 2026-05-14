@@ -10,33 +10,44 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicHooksSyncCatalogRouteImport } from './routes/api/public/hooks/sync-catalog'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksSyncCatalogRoute =
+  ApiPublicHooksSyncCatalogRouteImport.update({
+    id: '/api/public/hooks/sync-catalog',
+    path: '/api/public/hooks/sync-catalog',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/hooks/sync-catalog'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/hooks/sync-catalog'
+  id: '__root__' | '/' | '/api/public/hooks/sync-catalog'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicHooksSyncCatalogRoute: typeof ApiPublicHooksSyncCatalogRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +59,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/sync-catalog': {
+      id: '/api/public/hooks/sync-catalog'
+      path: '/api/public/hooks/sync-catalog'
+      fullPath: '/api/public/hooks/sync-catalog'
+      preLoaderRoute: typeof ApiPublicHooksSyncCatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicHooksSyncCatalogRoute: ApiPublicHooksSyncCatalogRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
