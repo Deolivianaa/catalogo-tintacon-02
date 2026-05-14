@@ -139,7 +139,6 @@ function Index() {
       <SyncDialog
         open={syncOpen}
         onClose={() => setSyncOpen(false)}
-        onConfirm={() => sync()}
         url={syncUrl}
       />
     </div>
