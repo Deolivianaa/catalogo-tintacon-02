@@ -1,24 +1,26 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { parseCsv, type ParseProgress } from "@/utils/csv";
+import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
 
 const STORAGE_KEY = "tintacon-catalog-v1";
-const SYNC_URL_KEY = "tintacon-sync-url";
-const LAST_SYNC_KEY = "tintacon-last-sync";
+const VERSION_KEY = "tintacon-catalog-version";
 const DEFAULT_CSV = "/data/produtos.csv";
-const SYNC_HOUR = 19; // 19:00 diariamente
 
 export function useCatalog() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState<ParseProgress | null>(null);
-  const [syncUrl, setSyncUrl] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(SYNC_URL_KEY);
-  });
+  const [syncUrl, setSyncUrl] = useState<string | null>(null);
   const syncingRef = useRef(false);
+  const knownVersionRef = useRef<number>(
+    typeof window !== "undefined"
+      ? Number(localStorage.getItem(VERSION_KEY) ?? 0)
+      : 0,
+  );
 
+  // Carregamento inicial: cache local OU CSV padrão
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -86,15 +88,6 @@ export function useCatalog() {
         } catch {
           toast.warning("Cache local cheio — produtos carregados, mas não persistidos");
         }
-        if (typeof source === "string") {
-          try {
-            localStorage.setItem(SYNC_URL_KEY, source);
-            localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
-            setSyncUrl(source);
-          } catch {
-            /* ignore */
-          }
-        }
         if (!opts?.silent) {
           toast.success(`${data.length.toLocaleString("pt-BR")} produtos importados`);
         }
@@ -111,49 +104,54 @@ export function useCatalog() {
     [],
   );
 
-  const sync = useCallback(
-    async (opts?: { silent?: boolean }) => {
-      const url = typeof window !== "undefined" ? localStorage.getItem(SYNC_URL_KEY) : null;
-      if (!url) {
-        if (!opts?.silent) toast.error("Nenhuma URL de sincronização configurada");
-        return;
-      }
-      if (!opts?.silent) toast.info("Sincronizando catálogo...");
-      await importFile(url, { clearBefore: true, silent: opts?.silent });
-      if (opts?.silent) {
-        toast.success("Catálogo sincronizado automaticamente (19:00)");
-      }
-    },
-    [importFile],
-  );
-
-  // Auto-sync diário às 19:00 (enquanto o app estiver aberto)
+  // Carrega versão atual + assina realtime
   useEffect(() => {
-    if (!syncUrl) return;
-    let timer: ReturnType<typeof setTimeout>;
+    let cancelled = false;
 
-    const scheduleNext = () => {
-      const now = new Date();
-      const next = new Date(now);
-      next.setHours(SYNC_HOUR, 0, 0, 0);
-      if (next.getTime() <= now.getTime()) {
-        next.setDate(next.getDate() + 1);
+    const applyRow = async (row: { url: string | null; version: number }, isInitial: boolean) => {
+      if (cancelled) return;
+      setSyncUrl(row.url);
+      const known = knownVersionRef.current;
+      if (!row.url) return;
+      // Na carga inicial, só re-baixa se a versão remota for maior que a conhecida
+      if (isInitial && row.version <= known) return;
+      knownVersionRef.current = row.version;
+      try {
+        localStorage.setItem(VERSION_KEY, String(row.version));
+      } catch {
+        /* ignore */
       }
-      const ms = next.getTime() - now.getTime();
-      timer = setTimeout(async () => {
-        const last = localStorage.getItem(LAST_SYNC_KEY);
-        const today = new Date().toDateString();
-        const lastDay = last ? new Date(last).toDateString() : "";
-        if (lastDay !== today) {
-          await sync({ silent: true });
-        }
-        scheduleNext();
-      }, ms);
+      if (!isInitial) toast.info("Sincronizando catálogo (atualização remota)...");
+      await importFile(row.url, { clearBefore: true, silent: isInitial });
+      if (!isInitial) toast.success("Catálogo atualizado");
     };
 
-    scheduleNext();
-    return () => clearTimeout(timer);
-  }, [syncUrl, sync]);
+    (async () => {
+      const { data } = await supabase
+        .from("catalog_sync")
+        .select("url, version")
+        .eq("id", 1)
+        .single();
+      if (data) await applyRow(data, true);
+    })();
 
-  return { products, loading, progress, importFile, sync, syncUrl };
+    const channel = supabase
+      .channel("catalog_sync_changes")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "catalog_sync" },
+        (payload) => {
+          const row = payload.new as { url: string | null; version: number };
+          void applyRow(row, false);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [importFile]);
+
+  return { products, loading, progress, importFile, syncUrl };
 }
