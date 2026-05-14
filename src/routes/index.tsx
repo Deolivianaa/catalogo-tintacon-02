@@ -32,7 +32,7 @@ function uniqueSorted(arr: string[]): string[] {
 }
 
 function Index() {
-  const { products, loading, progress, importFile, sync, syncUrl } = useCatalog();
+  const { products, loading, progress, importFile, syncUrl } = useCatalog();
   const [importOpen, setImportOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [search, setSearch] = useState("");
