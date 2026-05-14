@@ -1,13 +1,15 @@
-import { Upload } from "lucide-react";
+import { RefreshCw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo-tintacon.png";
 
 interface Props {
   total: number;
   onImportClick: () => void;
+  onSyncClick: () => void;
+  syncEnabled: boolean;
 }
 
-export function CatalogHeader({ total, onImportClick }: Props) {
+export function CatalogHeader({ total, onImportClick, onSyncClick, syncEnabled }: Props) {
   return (
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -25,10 +27,18 @@ export function CatalogHeader({ total, onImportClick }: Props) {
             </p>
           </div>
         </div>
-        <Button variant="outline" onClick={onImportClick} className="gap-2">
-          <Upload className="h-4 w-4" />
-          Importar CSV
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {syncEnabled && (
+            <Button variant="outline" onClick={onSyncClick} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Sincronizar
+            </Button>
+          )}
+          <Button variant="outline" onClick={onImportClick} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Importar CSV
+          </Button>
+        </div>
       </div>
     </header>
   );

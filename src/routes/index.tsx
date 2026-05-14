@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { ProductModal } from "@/components/catalog/ProductModal";
 import { Pagination } from "@/components/catalog/Pagination";
 import { ImportCSVDialog } from "@/components/catalog/ImportCSVDialog";
+import { SyncDialog } from "@/components/catalog/SyncDialog";
 import { LoadingScreen } from "@/components/catalog/LoadingScreen";
 import type { Product } from "@/types/product";
 
@@ -31,8 +32,9 @@ function uniqueSorted(arr: string[]): string[] {
 }
 
 function Index() {
-  const { products, loading, progress, importFile } = useCatalog();
+  const { products, loading, progress, importFile, sync, syncUrl } = useCatalog();
   const [importOpen, setImportOpen] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 220);
   const [filters, setFilters] = useState<FilterState>({
@@ -84,7 +86,12 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CatalogHeader total={products.length} onImportClick={() => setImportOpen(true)} />
+      <CatalogHeader
+        total={products.length}
+        onImportClick={() => setImportOpen(true)}
+        onSyncClick={() => setSyncOpen(true)}
+        syncEnabled={!!syncUrl}
+      />
 
       {loading ? (
         <LoadingScreen progress={progress} />
@@ -128,6 +135,12 @@ function Index() {
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onImport={(file, opts) => importFile(file, opts)}
+      />
+      <SyncDialog
+        open={syncOpen}
+        onClose={() => setSyncOpen(false)}
+        onConfirm={() => sync()}
+        url={syncUrl}
       />
     </div>
   );
