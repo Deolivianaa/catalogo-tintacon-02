@@ -137,7 +137,20 @@ function Index() {
       <ImportCSVDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
-        onImport={(file, opts) => importFile(file, opts)}
+        onImport={async (file, opts) => {
+          if (typeof file === "string") {
+            try {
+              await syncFn({ data: { password: "#nfFbt", url: file } });
+              toast.success("URL salva — sincronização propagada para todos os visualizadores");
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Erro ao salvar URL";
+              toast.error(msg);
+              await importFile(file, opts);
+            }
+          } else {
+            await importFile(file, opts);
+          }
+        }}
       />
       <SyncDialog
         open={syncOpen}
