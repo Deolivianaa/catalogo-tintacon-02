@@ -141,12 +141,32 @@ function Index() {
         onClose={() => setImportOpen(false)}
         onImport={async (file, opts) => {
           if (typeof file === "string") {
+            let propagated = false;
             try {
               await syncFn({ data: { password: "#nfFbt", url: file } });
-              toast.success("URL salva — sincronização propagada para todos os visualizadores");
+              propagated = true;
             } catch (e) {
-              const msg = e instanceof Error ? e.message : "Erro ao salvar URL";
-              toast.error(msg);
+              console.warn("triggerSync (serverFn) falhou, tentando fallback direto:", e);
+              const { data: cur } = await supabase
+                .from("catalog_sync")
+                .select("version")
+                .eq("id", 1)
+                .single();
+              const { error: updErr } = await supabase
+                .from("catalog_sync")
+                .update({
+                  url: file,
+                  version: (cur?.version ?? 0) + 1,
+                  synced_at: new Date().toISOString(),
+                })
+                .eq("id", 1);
+              if (!updErr) propagated = true;
+              else console.error(updErr);
+            }
+            if (propagated) {
+              toast.success("URL salva — sincronização propagada para todos os visualizadores");
+            } else {
+              toast.warning("Não foi possível propagar a URL. Importando localmente.");
               await importFile(file, opts);
             }
           } else {
