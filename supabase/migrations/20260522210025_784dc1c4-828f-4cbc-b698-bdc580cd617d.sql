@@ -1,0 +1,1 @@
+create policy "catalog_sync_public_update" on public.catalog_sync for update to anon, authenticated using (id = 1) with check (id = 1);
