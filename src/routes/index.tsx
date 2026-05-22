@@ -15,6 +15,7 @@ import { ImportCSVDialog } from "@/components/catalog/ImportCSVDialog";
 import { SyncDialog } from "@/components/catalog/SyncDialog";
 import { LoadingScreen } from "@/components/catalog/LoadingScreen";
 import { triggerSync } from "@/lib/catalog-sync.functions";
+import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
 
 export const Route = createFileRoute("/")({
