@@ -1,5 +1,15 @@
 import "./lib/error-capture";
 
+// Polyfill WebSocket on Node < 22 so supabase-js realtime client works during SSR
+if (typeof (globalThis as { WebSocket?: unknown }).WebSocket === "undefined") {
+  try {
+    const ws = require("ws");
+    (globalThis as { WebSocket?: unknown }).WebSocket = ws.WebSocket ?? ws;
+  } catch {
+    /* ignore — browser still uses native WebSocket */
+  }
+}
+
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
