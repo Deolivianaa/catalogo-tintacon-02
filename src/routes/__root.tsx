@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { BuildBadge } from "@/components/BuildBadge";
 
 import appCss from "../styles.css?url";
 
@@ -121,6 +122,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <SonnerToaster />
+      <BuildBadge />
     </QueryClientProvider>
   );
 }
