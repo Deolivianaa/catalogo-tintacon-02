@@ -28,6 +28,9 @@ export const triggerSync = createServerFn({ method: "POST" })
       throw new Error("Senha incorreta");
     }
 
+    const supabaseAdmin = getSupabase();
+
+
     const { data: current, error: readErr } = await supabaseAdmin
       .from("catalog_sync")
       .select("url, version")
