@@ -139,6 +139,7 @@ function Index() {
       <ImportCSVDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
+        onClearOnly={clearCatalog}
         onImport={async (file, opts) => {
           if (typeof file === "string") {
             let propagated = false;
