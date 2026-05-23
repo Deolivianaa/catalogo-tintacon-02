@@ -103,6 +103,16 @@ export function useCatalog() {
     },
     [],
   );
+  const clearCatalog = useCallback(() => {
+    setProducts([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    toast.success("Catálogo limpo");
+  }, []);
+
 
   // Carrega versão atual + assina realtime
   useEffect(() => {
@@ -153,5 +163,5 @@ export function useCatalog() {
     };
   }, [importFile]);
 
-  return { products, loading, progress, importFile, syncUrl };
+  return { products, loading, progress, importFile, syncUrl, clearCatalog };
 }

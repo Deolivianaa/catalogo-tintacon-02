@@ -13,9 +13,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onImport: (source: File | string, opts: { clearBefore: boolean }) => void;
+  onClearOnly: () => void;
 }
 
-export function ImportCSVDialog({ open, onClose, onImport }: Props) {
+export function ImportCSVDialog({ open, onClose, onImport, onClearOnly }: Props) {
   const [unlocked, setUnlocked] = useState(false);
   const [pwd, setPwd] = useState("");
   const [clearBefore, setClearBefore] = useState(false);
@@ -112,6 +113,22 @@ export function ImportCSVDialog({ open, onClose, onImport }: Props) {
               <Trash2 className="h-4 w-4" />
               Limpar catálogo antes de importar
             </label>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (confirm("Limpar todo o catálogo? Esta ação não pode ser desfeita.")) {
+                  onClearOnly();
+                  onClose();
+                }
+              }}
+              className="h-11 w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+              Limpar catálogo agora (sem importar)
+            </Button>
+
 
             <Tabs defaultValue="file" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
