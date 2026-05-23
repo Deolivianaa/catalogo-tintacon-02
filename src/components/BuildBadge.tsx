@@ -1,4 +1,4 @@
-export const BUILD_VERSION = "v1.0.2";
+export const BUILD_VERSION = "v1.0.3";
 
 export function BuildBadge() {
   return (
