@@ -13,9 +13,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onImport: (source: File | string, opts: { clearBefore: boolean }) => void;
+  onClearOnly: () => void;
 }
 
-export function ImportCSVDialog({ open, onClose, onImport }: Props) {
+export function ImportCSVDialog({ open, onClose, onImport, onClearOnly }: Props) {
   const [unlocked, setUnlocked] = useState(false);
   const [pwd, setPwd] = useState("");
   const [clearBefore, setClearBefore] = useState(false);
