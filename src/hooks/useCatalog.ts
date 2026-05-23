@@ -163,5 +163,5 @@ export function useCatalog() {
     };
   }, [importFile]);
 
-  return { products, loading, progress, importFile, syncUrl };
+  return { products, loading, progress, importFile, syncUrl, clearCatalog };
 }
