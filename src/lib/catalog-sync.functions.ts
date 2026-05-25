@@ -55,3 +55,36 @@ export const triggerSync = createServerFn({ method: "POST" })
 
     return { ok: true, url };
   });
+
+export const clearCatalogRemote = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ password: z.string() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    if (data.password !== SYNC_PASSWORD) {
+      throw new Error("Senha incorreta");
+    }
+
+    const supabaseAdmin = getSupabase();
+
+    const { data: current, error: readErr } = await supabaseAdmin
+      .from("catalog_sync")
+      .select("version")
+      .eq("id", 1)
+      .single();
+
+    if (readErr) throw new Error(readErr.message);
+
+    const { error: updErr } = await supabaseAdmin
+      .from("catalog_sync")
+      .update({
+        url: null,
+        version: (current?.version ?? 0) + 1,
+        synced_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+
+    if (updErr) throw new Error(updErr.message);
+
+    return { ok: true };
+  });
